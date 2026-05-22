@@ -4,10 +4,7 @@ import express from "express";
 import cors from "cors";
 import { createRestRouter } from "../api/rest.js";
 import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
-import { dirname, resolve } from "path";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import { join } from "path";
 
 export async function createHttpTransport(server: McpServer) {
   const port = parseInt(process.env.PORT || "3000", 10);
@@ -30,13 +27,19 @@ export async function createHttpTransport(server: McpServer) {
     });
   }
 
-  // OpenAPI spec (dynamically set server URL)
-  app.get("/openapi.json", (_req, res) => {
-    const specPath = resolve(__dirname, "../openapi.json");
-    const spec = JSON.parse(readFileSync(specPath, "utf-8"));
-    const host = process.env.RENDER_EXTERNAL_URL || process.env.BASE_URL || `http://localhost:${port}`;
-    spec.servers = [{ url: `${host}/api` }];
-    res.json(spec);
+  // OpenAPI spec - serve with dynamic server URL
+  app.get("/openapi.json", (req, res) => {
+    try {
+      const proto = req.headers["x-forwarded-proto"] || req.protocol;
+      const host = req.headers["x-forwarded-host"] || req.headers.host;
+      const baseUrl = `${proto}://${host}/api`;
+      const raw = readFileSync(join(process.cwd(), "openapi.json"), "utf-8");
+      const spec = JSON.parse(raw);
+      spec.servers = [{ url: baseUrl }];
+      res.json(spec);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
   });
 
   // REST API for GPT Actions
