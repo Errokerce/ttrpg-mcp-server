@@ -20,7 +20,7 @@ export async function createHttpTransport(server: McpServer) {
   if (apiKey) {
     app.use((req, res, next) => {
       if (req.path === "/health" || req.path === "/openapi.json") return next();
-      const token = req.headers.authorization?.replace("Bearer ", "");
+      const token = req.headers.authorization?.replace("Bearer ", "") || req.query.api_key;
       if (token !== apiKey) return res.status(401).json({ error: "Unauthorized" });
       next();
     });
