@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import express from "express";
+import cors from "cors";
 import { createRestRouter } from "../api/rest.js";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
@@ -11,6 +12,7 @@ export async function createHttpTransport(server: McpServer) {
   const app = express();
 
   app.use(express.json());
+  app.use(cors());
 
   // Health check (no auth)
   app.get("/health", (_req, res) => res.json({ status: "ok" }));
@@ -26,11 +28,13 @@ export async function createHttpTransport(server: McpServer) {
     });
   }
 
-  // OpenAPI spec
+  // OpenAPI spec (dynamically set server URL)
   app.get("/openapi.json", (_req, res) => {
     const dir = dirname(fileURLToPath(import.meta.url));
-    const spec = readFileSync(join(dir, "../../openapi.json"), "utf-8");
-    res.type("application/json").send(spec);
+    const spec = JSON.parse(readFileSync(join(dir, "../../openapi.json"), "utf-8"));
+    const host = process.env.RENDER_EXTERNAL_URL || process.env.BASE_URL || `http://localhost:${port}`;
+    spec.servers = [{ url: `${host}/api` }];
+    res.type("application/json").json(spec);
   });
 
   // REST API for GPT Actions
