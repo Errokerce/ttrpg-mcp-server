@@ -5,7 +5,9 @@ import cors from "cors";
 import { createRestRouter } from "../api/rest.js";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+import { dirname, resolve } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export async function createHttpTransport(server: McpServer) {
   const port = parseInt(process.env.PORT || "3000", 10);
@@ -30,11 +32,11 @@ export async function createHttpTransport(server: McpServer) {
 
   // OpenAPI spec (dynamically set server URL)
   app.get("/openapi.json", (_req, res) => {
-    const dir = dirname(fileURLToPath(import.meta.url));
-    const spec = JSON.parse(readFileSync(join(dir, "../../openapi.json"), "utf-8"));
+    const specPath = resolve(__dirname, "../openapi.json");
+    const spec = JSON.parse(readFileSync(specPath, "utf-8"));
     const host = process.env.RENDER_EXTERNAL_URL || process.env.BASE_URL || `http://localhost:${port}`;
     spec.servers = [{ url: `${host}/api` }];
-    res.type("application/json").json(spec);
+    res.json(spec);
   });
 
   // REST API for GPT Actions
