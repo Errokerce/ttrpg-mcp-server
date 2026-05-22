@@ -1,0 +1,32 @@
+{
+  "name": "ttrpg-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for TTRPG game management - dice rolling, player state, progress tracking, world state",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@dice-roller/rpg-dice-roller": "^5.5.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "express": "^4.21.2",
+    "mongodb": "^7.2.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.3",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.7"
+  }
+}

@@ -1,0 +1,309 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TTRPG Game Server",
+    "version": "1.0.0",
+    "description": "A generic TTRPG game management API for dice rolling, player characters, game progress, world state, and rules."
+  },
+  "servers": [
+    { "url": "https://your-app.onrender.com/api" }
+  ],
+  "paths": {
+    "/roll_dice": {
+      "post": {
+        "operationId": "rollDice",
+        "summary": "Roll dice using standard notation",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["notation"],
+                "properties": {
+                  "notation": { "type": "string", "description": "Dice notation, e.g. 2d6+3, 4d6kh3, 8d10!" },
+                  "reason": { "type": "string", "description": "Reason for the roll" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Roll result with total and individual dice" } }
+      }
+    },
+    "/campaigns": {
+      "get": {
+        "operationId": "listCampaigns",
+        "summary": "List all campaigns",
+        "responses": { "200": { "description": "Array of campaigns" } }
+      },
+      "post": {
+        "operationId": "createCampaign",
+        "summary": "Create a new campaign and set it as active",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "setting": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Created campaign" } }
+      }
+    },
+    "/campaigns/{id}/switch": {
+      "post": {
+        "operationId": "switchCampaign",
+        "summary": "Switch to an existing campaign",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Switched campaign" } }
+      }
+    },
+    "/campaigns/current": {
+      "get": {
+        "operationId": "getCurrentCampaign",
+        "summary": "Get the currently active campaign",
+        "responses": { "200": { "description": "Current campaign" } }
+      }
+    },
+    "/players": {
+      "get": {
+        "operationId": "listPlayers",
+        "summary": "List all players in the active campaign",
+        "responses": { "200": { "description": "Array of players" } }
+      },
+      "post": {
+        "operationId": "createPlayer",
+        "summary": "Create a new player character",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "hp": { "type": "number", "default": 10 },
+                  "maxHp": { "type": "number", "default": 10 },
+                  "attributes": { "type": "object", "additionalProperties": { "type": "number" } },
+                  "skills": { "type": "array", "items": { "type": "string" } },
+                  "inventory": { "type": "array", "items": { "type": "string" } },
+                  "customFields": { "type": "object", "additionalProperties": {} }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Created player" } }
+      }
+    },
+    "/players/{name}": {
+      "get": {
+        "operationId": "getPlayer",
+        "summary": "Get a player by name",
+        "parameters": [{ "name": "name", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Player data" } }
+      },
+      "patch": {
+        "operationId": "updatePlayer",
+        "summary": "Partially update a player character",
+        "parameters": [{ "name": "name", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "hp": { "type": "number" },
+                  "maxHp": { "type": "number" },
+                  "attributes": { "type": "object", "additionalProperties": { "type": "number" } },
+                  "skills": { "type": "array", "items": { "type": "string" } },
+                  "inventory": { "type": "array", "items": { "type": "string" } },
+                  "customFields": { "type": "object", "additionalProperties": {} }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Updated player" } }
+      }
+    },
+    "/progress": {
+      "get": {
+        "operationId": "getProgressHistory",
+        "summary": "Get progress history",
+        "parameters": [
+          { "name": "day", "in": "query", "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": { "200": { "description": "Progress entries" } }
+      },
+      "post": {
+        "operationId": "advanceProgress",
+        "summary": "Record a new progress entry",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "summary"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "summary": { "type": "string" },
+                  "newDay": { "type": "boolean", "default": false }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Created progress entry" } }
+      }
+    },
+    "/progress/current": {
+      "get": {
+        "operationId": "getCurrentProgress",
+        "summary": "Get the latest progress entry",
+        "responses": { "200": { "description": "Latest progress" } }
+      }
+    },
+    "/world/entities": {
+      "get": {
+        "operationId": "queryWorldEntities",
+        "summary": "Query world entities",
+        "parameters": [
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["NPC", "Location", "Faction", "Item"] } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50 } }
+        ],
+        "responses": { "200": { "description": "Array of entities" } }
+      },
+      "put": {
+        "operationId": "upsertWorldEntity",
+        "summary": "Create or update a world entity",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["type", "name"],
+                "properties": {
+                  "type": { "type": "string", "enum": ["NPC", "Location", "Faction", "Item"] },
+                  "name": { "type": "string" },
+                  "properties": { "type": "object", "additionalProperties": {} },
+                  "relationships": { "type": "array", "items": { "type": "object", "properties": { "target": { "type": "string" }, "relation": { "type": "string" } }, "required": ["target", "relation"] } }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Upserted entity" } }
+      }
+    },
+    "/world/entities/{name}": {
+      "get": {
+        "operationId": "getWorldEntity",
+        "summary": "Get a world entity by name",
+        "parameters": [
+          { "name": "name", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["NPC", "Location", "Faction", "Item"] } }
+        ],
+        "responses": { "200": { "description": "Entity data" } }
+      }
+    },
+    "/events": {
+      "get": {
+        "operationId": "getEventHistory",
+        "summary": "Get event history",
+        "parameters": [
+          { "name": "entity", "in": "query", "schema": { "type": "string" } },
+          { "name": "tag", "in": "query", "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 30 } }
+        ],
+        "responses": { "200": { "description": "Array of events" } }
+      },
+      "post": {
+        "operationId": "logEvent",
+        "summary": "Log a world event",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["description"],
+                "properties": {
+                  "description": { "type": "string" },
+                  "involvedEntities": { "type": "array", "items": { "type": "string" } },
+                  "tags": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Logged event" } }
+      }
+    },
+    "/rules": {
+      "get": {
+        "operationId": "listRules",
+        "summary": "List rules for the active campaign",
+        "parameters": [
+          { "name": "category", "in": "query", "schema": { "type": "string", "enum": ["combat", "magic", "skill", "exploration", "social", "custom"] } }
+        ],
+        "responses": { "200": { "description": "Array of rules" } }
+      },
+      "put": {
+        "operationId": "setRule",
+        "summary": "Create or update a game rule",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["category", "title", "content"],
+                "properties": {
+                  "category": { "type": "string", "enum": ["combat", "magic", "skill", "exploration", "social", "custom"] },
+                  "title": { "type": "string" },
+                  "content": { "type": "string", "description": "Rule content in markdown" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Rule set confirmation" } }
+      },
+      "delete": {
+        "operationId": "deleteRule",
+        "summary": "Delete a game rule",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["category", "title"],
+                "properties": {
+                  "category": { "type": "string", "enum": ["combat", "magic", "skill", "exploration", "social", "custom"] },
+                  "title": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Deletion confirmation" } }
+      }
+    }
+  }
+}
