@@ -5,6 +5,11 @@ import cors from "cors";
 import { createRestRouter } from "../api/rest.js";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export async function createHttpTransport(server: McpServer) {
   const port = parseInt(process.env.PORT || "3000", 10);
@@ -33,7 +38,7 @@ export async function createHttpTransport(server: McpServer) {
       const proto = req.headers["x-forwarded-proto"] || req.protocol;
       const host = req.headers["x-forwarded-host"] || req.headers.host;
       const baseUrl = `${proto}://${host}/api`;
-      const raw = readFileSync(join(process.cwd(), "openapi.json"), "utf-8");
+      const raw = readFileSync(join(__dirname, "../openapi.json"), "utf-8");
       const spec = JSON.parse(raw);
       spec.servers = [{ url: baseUrl }];
       res.json(spec);
